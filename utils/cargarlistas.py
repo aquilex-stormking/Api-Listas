@@ -8,12 +8,19 @@ import warnings
 
 # libreria para ignorar las advertencias
 def traeDatos(page=1):
-        response = requests.get('https://api.fbi.gov/wanted/v1/list', params={
+        response = requests.get('https://api.fbi.gov/wanted/v1/list', params = {
         'page': page
     })
         data = json.loads(response.content)
         return  data
 
+def validar(a):
+        if a is not None:
+            return a.text
+        else:
+            a=" "
+            return a
+        
 def cargardatos():
 
     warnings.filterwarnings("ignore")
@@ -25,18 +32,35 @@ def cargardatos():
     soupofac = BeautifulSoup(xmlofac.content, 'lxml', from_encoding='utf-8')
     persona = soupofac.findAll('sdnentry')
     pasa1 = []
+
+    def validar(a):
+        if a is not None:
+            return a.text
+        else:
+            a=" "
+            return a
     for i in persona:
         fName = i.find('firstname')
-        sName= i.find('lastname')
-        uID=i.find('uid')
-        if fName is not None and sName is not None :
-            pasa1.append((uID.text,(fName.text+" "+sName.text).upper()))
-        if fName is not None:
-            pasa1.append((uID.text,(fName.text).upper()))
-        if sName is not None:
-            pasa1.append((uID.text,(sName.text).upper()))
+        sName = i.find('lastname')
+        uID = i.find('uid')
+        tId = i.find('idtype')
+        nId = i.find('idnumber')
+        aDdress = i.find('address')
+        cCountry = i.find('country')
+        cCity = i.find('city')
 
-    dfofac = pd.DataFrame(pasa1, columns=['uid', 'first_name'])
+        fName = validar(fName)
+        sName = validar(sName)
+        uID = validar(uID)
+        tId = validar(tId)
+        nId = validar(nId)
+        aDdress = validar(aDdress)
+        cCountry = validar(cCountry)
+        cCity = validar(cCity)
+
+        pasa1.append((uID,(fName+" "+sName).upper(),tId,nId,aDdress,cCountry,cCity))
+
+    dfofac = pd.DataFrame(pasa1, columns = ['uid', 'first_name','tipoId','identificacion','direccion','pais','ciudad'])
     dfofac.to_pickle("dummy.pkl")
 
     # Se obtiene la informacion de la onu
@@ -47,27 +71,36 @@ def cargardatos():
     pasa1 = []
 
     for i in persona:
-        dataId= i.find('dataid')
-        fName= i.find('first_name')
-        sName= i.find('second_name')
-        tName= i.find('third_name')
-        aName= i.find('alias_name')
-        if fName is not None and sName is not None and tName is not None and aName is not None:
-            nombre = fName.text+' '+sName.text+' '+tName.text+' '+aName.text
-            pasa1.append((dataId.text,nombre.upper()))
-        if fName is not None and sName is not None and tName is not None:
-            nombre = fName.text+' '+sName.text+' '+tName.text
-            pasa1.append((dataId.text,nombre.upper()))
-        if fName is not None and sName is not None and aName is not None:
-            nombre = fName.text+' '+sName.text+' '+aName.text
-            pasa1.append((dataId.text,nombre.upper()))
+        
+        dataId = i.find('dataid')
+        fName = i.find('first_name')
+        sName = i.find('second_name')
+        tName = i.find('third_name')
+        aName = i.find('alias_name')
+        tId = i.find('type_of_document')
+        nId = i.find('number')
+        description = i.find('note')
+        cCountry = i.find('issuing_country') 
+        dateBirth = i.find('date')
+        dataId = validar(dataId)
+        fName = validar(fName)
+        sName = validar(sName)
+        tName = validar(tName)
+        aName = validar(aName)
+        tId = validar(tId)
+        nId = validar(nId)
+        description = validar(description)
+        cCountry = validar(cCountry)
+        dateBirth = validar(dateBirth)
+        
+        nombre = fName+' '+sName+' '+tName+' '+aName
+        pasa1.append((dataId,nombre.upper(),tId,nId,description,cCountry,dateBirth)) 
             
-    dfonu = pd.DataFrame(pasa1, columns=['dataid', 'first_name'])
+    dfonu = pd.DataFrame(pasa1, columns = ['dataid', 'first_name','tipo_documento','numero_documento','description','pais','fecha_nacimiento'])
     #almacenar datos en la base de datos sql
     dfonu.to_pickle("dummy2.pkl")
 
-    #Se obtiene la informacion del fbi
-    
+    # Se obtiene la informacion del fbi
     data=traeDatos()
     datos = data['total']
     dato = 0
@@ -75,15 +108,18 @@ def cargardatos():
     page=0
     while dato < datos:
         
-        data=traeDatos(page)
+        data = traeDatos(page)
         
         for o in data['items']:
             
-            if o['title'] is not None and o['uid'] is not None:
-                guarda.append((o['uid'],o['title']))
-            dato+=1
-        page+=1
-    dffbi = pd.DataFrame(guarda, columns=['uid', 'title'])
+            o['details']
+            o['url']
+            o['nationality']
+            o['images']   
+            guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images']))
+            dato += 1
+        page += 1
+    dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture'])
     dffbi.to_pickle("dummy3.pkl")
 
 cargardatos()
