@@ -25,13 +25,13 @@ def leerOnu():
 
     return lista
 
-def leerFbi():
+# def leerFbi():
 
-    datosFbi = pd.read_pickle("dummy3.pkl")
+#     datosFbi = pd.read_pickle("dummy3.pkl")
 
-    lista=[]
-    lista = datosFbi.to_numpy().tolist()
+#     lista=[]
+#     lista = datosFbi.to_numpy().tolist()
 
-    return lista
+#     return lista
 
 
