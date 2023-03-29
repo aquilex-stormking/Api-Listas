@@ -8,12 +8,16 @@ import warnings
 
 # libreria para ignorar las advertencias
 def traeDatos(page=1):
+
+    try:    
         response = requests.get('https://api.fbi.gov/wanted/v1/list', params = {
-        'page': page
-    })
+            'page': page
+        })
         data = json.loads(response.content)
-        print(data)
-        return data
+    except:
+        data = None
+
+    return data
 
 def validar(a):
         if a is not None:
@@ -95,36 +99,40 @@ def cargardatos():
     #almacenar datos en la base de datos sql
     dfonu.to_pickle("dummy2.pkl")
 
-    # # Se obtiene la informacion del fbi
-    # data=traeDatos()
-    # datos = data['total']
-    # dato = 0
-    # guarda = []
-    # page=0
-    # while dato < datos:
-        
-    #     data=traeDatos(page)
-        
-    #     for o in data['items']:
+    # Se obtiene la informacion del fbi
+    data=traeDatos()
+    guarda = []
+    print(data)
+    if data is None:
+        return guarda
+
+    else:
+        datos = data['total']
+        dato = 0
+        page=0
+        while dato < datos:
             
-    #         if o['title'] is not None and o['uid'] is not None:
-    #             guarda.append((o['uid'],o['title']))
-    #         dato+=1
-    #     page+=1
-    # dffbi = pd.DataFrame(guarda, columns=['uid', 'title'])
-    # dffbi.to_pickle("dummy3.pkl")
-    # #     data = traeDatos(page)
-        
-    #     for o in data['items']:
+            data=traeDatos(page)
+            for o in data['items']:
+                
+                if o['title'] is not None and o['uid'] is not None:
+                    guarda.append((o['uid'],o['title']))
+                dato+=1
+            page+=1
+        dffbi = pd.DataFrame(guarda, columns=['uid', 'title'])
+        dffbi.to_pickle("dummy3.pkl")
+        #     data = traeDatos(page)
             
-    #         o['details']
-    #         o['url']
-    #         o['nationality']
-    #         o['images']   
-    #         guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images']))
-    #         dato += 1
-    #     page += 1
-    # dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture'])
-    # dffbi.to_pickle("dummy3.pkl")
+        for o in data['items']:
+            
+            o['details']
+            o['url']
+            o['nationality']
+            o['images']   
+            guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images']))
+            dato += 1
+        page += 1
+        dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture'])
+        dffbi.to_pickle("dummy3.pkl")
 
 cargardatos()
