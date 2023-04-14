@@ -102,7 +102,7 @@ def cargardatos():
     # Se obtiene la informacion del fbi
     data=traeDatos()
     guarda = []
-    print(data)
+    
     if data is None:
         return guarda
 
