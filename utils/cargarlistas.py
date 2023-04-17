@@ -54,6 +54,7 @@ def cargardatos():
         tId = validar(tId)
         nId = validar(nId)
         aDdress = validar(aDdress)
+        aDdress = aDdress.replace('\n', ' ')
         cCountry = validar(cCountry)
         cCity = validar(cCity)
 
@@ -124,15 +125,25 @@ def cargardatos():
         #     data = traeDatos(page)
             
         for o in data['items']:
-            
-            o['details']
+            detallelink = ''
+            if o['details'] is not None :
+                o['details'] = o['details'] = o['details'].replace('<p>', ' ')
+                o['details'] = o['details'] = o['details'].replace('</p>', ' ')
+                o['details'] = o['details'] = o['details'].replace('\r\n', ' ')
+                
+                if "<a" in o['details']:
+                    detallelink= o['details'][o['details'].index("<a")+3 : o['details'].index("</a>")-1]
+                    
             o['url']
             o['nationality']
             o['images']   
-            guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images']))
+            guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images'],detallelink))
             dato += 1
         page += 1
-        dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture'])
+        dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture','detallelink'])
         dffbi.to_pickle("dummy3.pkl")
 
 cargardatos()
+
+
+
