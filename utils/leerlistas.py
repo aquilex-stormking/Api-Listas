@@ -5,32 +5,32 @@ import numpy as np
 warnings.filterwarnings("ignore")
 
 
-def leerOfac():
+def leer_ofac():
 
-    datosOfac = pd.read_pickle("dummy.pkl") 
+    datos_ofac = pd.read_pickle("dummy.pkl") 
 
     lista=[]
-    lista = datosOfac.to_numpy().tolist()
+    lista = datos_ofac.to_numpy().tolist()
 
     
 
     return lista
 
-def leerOnu():
+def leer_onu():
 
-    datosOnu = pd.read_pickle("dummy2.pkl")
+    datos_onu = pd.read_pickle("dummy2.pkl")
 
     lista=[]
-    lista = datosOnu.to_numpy().tolist()
+    lista = datos_onu.to_numpy().tolist()
 
     return lista
 
-def leerFbi():
+def leer_fbi():
 
-    datosFbi = pd.read_pickle("dummy3.pkl")
+    datos_fbi = pd.read_pickle("dummy3.pkl")
 
     lista=[]
-    lista = datosFbi.to_numpy().tolist()
+    lista = datos_fbi.to_numpy().tolist()
 
     return lista
 
