@@ -195,8 +195,8 @@ def cargardatos():
             'nacimiento': nacimiento,
             'pasaporte': pasaporte
         }
-        print(datos)
         persona.append(datos)
+        
     for o in grupos:
         datos= {
             'nombre':o,
