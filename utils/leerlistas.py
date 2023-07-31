@@ -34,4 +34,12 @@ def leer_fbi():
 
     return lista
 
+def leer_terro():
+    datos_terro = pd.read_pickle("dummy4.pkl")
+
+    lista=[]
+    lista = datos_terro.to_numpy().tolist()
+
+    return lista
+
 

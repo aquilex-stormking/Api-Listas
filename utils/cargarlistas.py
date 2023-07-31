@@ -143,7 +143,71 @@ def cargardatos():
         dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture','detallelink'])
         dffbi.to_pickle("dummy3.pkl")
 
+    #carga lista de terroristas
+    url = "https://eur-lex.europa.eu/legal-content/ES/TXT/HTML/?uri=OJ:L:2022:025:FULL"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        html_content = response.text
+    else:
+        print("Error al acceder a la página:", response.status_code)
+        exit()
+
+    soup = BeautifulSoup(html_content, "html.parser")
+    personas = []
+    grupos = []
+    cont = 0
+    lista_terro = []
+    # Encuentra el div con el id "L_2022025ES.01000301"
+    target_div = soup.find("div", id="L_2022025ES.01000301")
+
+    if target_div:
+        # Encuentra todas las tablas dentro del div
+        tables = target_div.find_all("table")
+
+        # Itera sobre las tablas y busca los elementos <span> en cada una de ellas
+        for table in tables:
+            span_elements = table.find_all("span")
+            for span in span_elements:
+                if cont <=12:
+                    personas.append(span.text)
+                    cont+= 1
+                else :
+                    grupos.append(span.text)
+    
+    else:           
+        print("No se encontró el div con el id 'L_2022025ES.01000301'")
+    persona = []
+    grupo = []
+    for o in personas:
+        indice_primera_coma = o.find(',')
+        indice_segunda_coma = o.find(',', indice_primera_coma + 1)
+        indice_punto = o.rfind('.')
+        indice_segundo_punto =o.rfind(':')
+        
+        nombre = o[:indice_primera_coma].strip()
+        apellido = o[indice_primera_coma + 1:indice_segunda_coma].strip()
+        nacimiento = o[indice_segunda_coma+1:indice_punto].strip()
+        pasaporte = o[indice_segundo_punto + 1:].strip()
+        datos = {
+            'nombre': nombre,
+            'apellido': apellido,
+            'nacimiento': nacimiento,
+            'pasaporte': pasaporte
+        }
+        print(datos)
+        persona.append(datos)
+    for o in grupos:
+        datos= {
+            'nombre':o,
+            'apellido': '',
+            'nacimiento': '',
+            'pasaporte': ''
+        }
+        persona.append(datos) 
+    
+    dfterro = pd.DataFrame(persona, columns = ['nombre', 'apellido','nacimiento','pasaporte'])
+    dfterro.to_pickle("dummy4.pkl")
+
 cargardatos()
-
-
 

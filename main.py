@@ -20,8 +20,17 @@ async def root():
     datos=leerlistas.leer_fbi()
     return datos
 
+@app.get("/ListaTerro")
+async def root():
+    datos=leerlistas.leer_terro()
+    return datos
+
 @app.get("/ActualizaListas")
 async def root():
     cargarlistas.cargardatos()
+
+@app.get("/VerTerroristas")
+async def root():
+    cargarlistas.lista_terrorista()
     
 
