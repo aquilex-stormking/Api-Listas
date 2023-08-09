@@ -25,12 +25,14 @@ async def root():
     datos=leerlistas.leer_terro()
     return datos
 
+@app.get("/ListaTerro2")
+async def root():
+    datos=cargarlistas.terroristas()
+    return datos
+
 @app.get("/ActualizaListas")
 async def root():
     cargarlistas.cargardatos()
 
-@app.get("/VerTerroristas")
-async def root():
-    cargarlistas.lista_terrorista()
     
 

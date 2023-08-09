@@ -1,11 +1,11 @@
 import pandas as pd
 import requests
 import json
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString
 import warnings
+import re
 
-
-
+data =[]
 # libreria para ignorar las advertencias
 def trae_datos(page=1):
 
@@ -16,8 +16,7 @@ def trae_datos(page=1):
         data = json.loads(response.content)
     except:
         data = None
-        raise Exception
-
+        
     return data
 
 def validar(a):
@@ -115,11 +114,11 @@ def cargardatos():
         while dato < datos:
             
             data=trae_datos(page)
-            for o in data['items']:
-                
-                if o['title'] is not None and o['uid'] is not None:
-                    guarda.append((o['uid'],o['title']))
-                dato+=1
+            if data is not None and 'items' in data:
+                for o in data['items']:    
+                    if o['title'] is not None and o['uid'] is not None:
+                        guarda.append((o['uid'],o['title']))
+                    dato+=1
             page+=1
         dffbi = pd.DataFrame(guarda, columns=['uid', 'title'])
         dffbi.to_pickle("dummy3.pkl")
@@ -211,3 +210,95 @@ def cargardatos():
 
 cargardatos()
 
+def terroristas():
+     #carga lista de terroristas
+    url = "http://historico.presidencia.gov.co/prensa_new/sne/2004/abril/05/04052004.htm"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        html_content = response.text
+    else:
+        print("Error al acceder a la página:", response.status_code)
+        exit()
+
+    # Analiza el contenido de la página con Beautiful Soup
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Busca el elemento <p> con la clase 'parrafos' que contiene '1. PERSONAS'
+    start = soup.find('p', class_='parrafos', string=lambda text: '1. PERSONAS' in text)
+
+    # Busca el elemento <p> con la clase 'parrafos' que contiene '2. GRUPOS Y ENTIDADES'
+    end = soup.find('p', class_='parrafos', string=lambda text: '2. GRUPOS Y ENTIDADES' in text)
+
+    # Busca los elementos que representan a las personas entre esas dos etiquetas
+    # Por ejemplo, supongamos que las personas están en elementos 'div' con la clase 'person'
+    persons = []
+    for sibling in start.next_siblings:
+        if sibling == end:
+            break
+        if isinstance(sibling, NavigableString):
+            continue  # ignora las cadenas de texto entre los elementos
+        if sibling.get('class') == ['parrafos']:
+            persons.append(sibling)
+
+    # Extrae el texto de los elementos
+    persons_text = [person.get_text() for person in persons]
+    clean_persons_text = [person.replace('\r\n       ', '') for person in persons_text]
+    clean_persons_text = [person.replace('\r\n  ', '') for person in clean_persons_text]
+    
+    # Inicializa una lista vacía para guardar los datos agrupados
+    grouped_data = []
+
+    # Inicializa una cadena vacía para guardar la información de la persona actual
+    current_person = ''
+
+    for line in clean_persons_text:
+        # Si la línea comienza con un número seguido de un punto, es el inicio de una nueva persona
+        if re.match(r'\d+\.', line):
+            # Si current_person no está vacío, entonces tenemos información de una persona que debemos guardar
+            if current_person:
+                grouped_data.append(current_person)
+            # Inicia una nueva persona
+            current_person = line
+        else:
+            # Si la línea no comienza con un número seguido de un punto, es información adicional de la persona actual
+            current_person += ' ' + line
+
+    # Asegúrate de guardar la información de la última persona
+    if current_person:
+        grouped_data.append(current_person)
+    
+    extracted_data = []
+    # Recorrer cada cadena en la lista de datos
+    for string in grouped_data:
+        # Buscar patrones de texto que correspondan a la información que necesitas
+        index = re.search(r'\d+\.', string)
+        name = re.search(r'\. ([A-Za-zÁÉÍÓÚáéíóú ,*]*)', string)
+        birth = re.search(r'nacido el ([\d\.]+)', string)
+        identification = re.search(r'DNI no ([\d\.]+)|DNI n\.o ([\d\.]+)|pasaporte n\.o ([\d\.]+)', string)
+    
+        # Añadir la información extraída a la lista (si existe, si no, añadir None)
+        extracted_data.append({
+            'Index': index.group(0)[:-1] if index else None,
+            'Name': name.group(1) if name else None,
+            'Birth': birth.group(1) if birth else None,
+            'Identification': identification.group(1) if identification else None
+        })
+
+    # Convertir la lista de datos extraídos en un DataFrame
+    df = pd.DataFrame(extracted_data)
+
+    # Ver el DataFrame
+    print(df)
+
+    paragraph = soup.find('p', class_='parrafos', string=lambda text: '2. GRUPOS Y ENTIDADES' in text)
+
+    # Busca los elementos que representan a las personas después de ese párrafo
+    # Por ejemplo, supongamos que las personas están en elementos 'div' con la clase 'person'
+    # Nota: esto dependerá de cómo esté estructurada la página web
+    persons = paragraph.find_next_siblings('p', class_='parrafos')
+
+    # Extrae el texto de los elementos
+    groups_text = [person.get_text() for person in persons]
+
+    
