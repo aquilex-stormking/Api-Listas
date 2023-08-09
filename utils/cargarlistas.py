@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup, NavigableString
 import warnings
 import re
 
-data =[]
+data =None
 # libreria para ignorar las advertencias
 def trae_datos(page=1):
 
@@ -111,33 +111,41 @@ def cargardatos():
         datos = data['total']
         dato = 0
         page=0
+        print(datos)
         while dato < datos:
             
             data=trae_datos(page)
+            if data is None:
+                return guarda
             if data is not None and 'items' in data:
-                for o in data['items']:    
+                for o in data['items']:
                     if o['title'] is not None and o['uid'] is not None:
                         guarda.append((o['uid'],o['title']))
                     dato+=1
+                
+            else:
+                dato+=1
+            
             page+=1
+            
         dffbi = pd.DataFrame(guarda, columns=['uid', 'title'])
         dffbi.to_pickle("dummy3.pkl")
-            
-        for o in data['items']:
-            detallelink = ''
-            if o['details'] is not None :
-                o['details'] = o['details'] = o['details'].replace('<p>', ' ')
-                o['details'] = o['details'] = o['details'].replace('</p>', ' ')
-                o['details'] = o['details'] = o['details'].replace('\r\n', ' ')
-                
-                if "<a" in o['details']:
-                    detallelink= o['details'][o['details'].index("<a")+3 : o['details'].index("</a>")-1]
+        if data is not None and 'items' in data:    
+            for o in data['items']:
+                detallelink = ''
+                if o['details'] is not None :
+                    o['details'] = o['details'] = o['details'].replace('<p>', ' ')
+                    o['details'] = o['details'] = o['details'].replace('</p>', ' ')
+                    o['details'] = o['details'] = o['details'].replace('\r\n', ' ')
                     
-            o['url']
-            o['nationality']
-            o['images']   
-            guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images'],detallelink))
-            dato += 1
+                    if "<a" in o['details']:
+                        detallelink= o['details'][o['details'].index("<a")+3 : o['details'].index("</a>")-1]
+                        
+                o['url']
+                o['nationality']
+                o['images']   
+                guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images'],detallelink))
+                dato += 1
         page += 1
         dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture','detallelink'])
         dffbi.to_pickle("dummy3.pkl")
