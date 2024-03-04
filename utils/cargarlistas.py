@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup, NavigableString
 import warnings
 import re
 
+
 data =None
 # libreria para ignorar las advertencias
 def trae_datos(page=1):
@@ -62,56 +63,60 @@ def cargardatos():
 
     dfofac = pd.DataFrame(pasa1, columns = ['uid', 'first_name','tipoId','identificacion','direccion','pais','ciudad'])
     dfofac.to_pickle("dummy.pkl")
-
+    # Suprime solo las advertencias de solicitud insegura
+    
     # Se obtiene la informacion de la onu
-    url = "https://scsanctions.un.org/resources/xml/sp/consolidated.xml"
-    xml = requests.get(url)
-    soup = BeautifulSoup(xml.content, 'lxml', from_encoding='utf-8')
-    persona = soup.findAll('individual')
-    pasa1 = []
+    try :
+        url = "http://scsanctions.un.org/resources/xml/sp/consolidated.xml"
+        xml = requests.get(url,verify=False)
+        soup = BeautifulSoup(xml.content, 'lxml', from_encoding='utf-8')
+        persona = soup.findAll('individual')
+        pasa1 = []
 
-    for i in persona:
-        
-        data_id = i.find('dataid')
-        f_name = i.find('first_name')
-        s_name = i.find('second_name')
-        t_name = i.find('third_name')
-        a_name = i.find('alias_name')
-        t_id = i.find('type_of_document')
-        n_id = i.find('number')
-        description = i.find('note')
-        country = i.find('issuing_country') 
-        date_birth = i.find('date')
-        data_id = validar(data_id)
-        f_name = validar(f_name)
-        s_name = validar(s_name)
-        t_name = validar(t_name)
-        a_name = validar(a_name)
-        t_id = validar(t_id)
-        n_id = validar(n_id)
-        description = validar(description)
-        country = validar(country)
-        date_birth = validar(date_birth)
-        
-        nombre = f_name+' '+s_name+' '+t_name+' '+a_name
-        pasa1.append((data_id,nombre.upper(),t_id,n_id,description,country,date_birth)) 
+        for i in persona:
             
+            data_id = i.find('dataid')
+            f_name = i.find('first_name')
+            s_name = i.find('second_name')
+            t_name = i.find('third_name')
+            a_name = i.find('alias_name')
+            t_id = i.find('type_of_document')
+            n_id = i.find('number')
+            description = i.find('note')
+            country = i.find('issuing_country') 
+            date_birth = i.find('date')
+            data_id = validar(data_id)
+            f_name = validar(f_name)
+            s_name = validar(s_name)
+            t_name = validar(t_name)
+            a_name = validar(a_name)
+            t_id = validar(t_id)
+            n_id = validar(n_id)
+            description = validar(description)
+            country = validar(country)
+            date_birth = validar(date_birth)
+            
+            nombre = f_name+' '+s_name+' '+t_name+' '+a_name
+            pasa1.append((data_id,nombre.upper(),t_id,n_id,description,country,date_birth)) 
+                
+    except:
+        pasa1=[]
+
     dfonu = pd.DataFrame(pasa1, columns = ['dataid', 'first_name','tipo_documento','numero_documento','description','pais','fecha_nacimiento'])
     #almacenar datos en la base de datos sql
     dfonu.to_pickle("dummy2.pkl")
-
     # Se obtiene la informacion del fbi
     data=trae_datos()
     guarda = []
     
     if data is None:
         return guarda
-
+    
     else:
         datos = data['total']
         dato = 0
         page=0
-        print(datos)
+        
         while dato < datos:
             
             data=trae_datos(page)

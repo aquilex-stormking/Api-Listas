@@ -11,6 +11,9 @@ python --version
 
 pip install fastapi hypercorn
 
+pip install -r requirements.txt
+
+
 #Correr FastAPI con Hypercorn: Navega a la carpeta de tu proyecto y ejecuta el siguiente comando (reemplaza main:app con la ubicación de tu aplicación FastAPI):
 
 hypercorn main:app --bind 0.0.0.0:8080
