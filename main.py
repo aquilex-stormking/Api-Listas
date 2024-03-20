@@ -4,27 +4,27 @@ from utils import cargarlistas,leerlistas
 app = FastAPI()
 cargar = cargarlistas.cargardatos()
 
-@app.get("/ListaOfac", tags=["listas"])
+@app.get("/ListaOfac", tags=["Listas"])
 async def root():
     datos=leerlistas.leer_ofac()
     return datos
 
-@app.get("/ListaOnu", tags=["listas"])
+@app.get("/ListaOnu", tags=["Listas"])
 async def root():
     datos=leerlistas.leer_onu()
     return datos
 
-@app.get("/ListaFbi", tags=["listas"])
+@app.get("/ListaFbi", tags=["Listas"])
 async def root():
     datos=leerlistas.leer_fbi()
     return datos
 
-@app.get("/ListaTerro", tags=["listas"])
+@app.get("/ListaTerro", tags=["Listas"])
 async def root():
     datos=leerlistas.leer_terro()
     return datos
 
-@app.get("/ListaTerro2", tags=["listas"])
+@app.get("/ListaTerro2", tags=["Listas"])
 async def root():
     datos=cargarlistas.terroristas()
     return datos
