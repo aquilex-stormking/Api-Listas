@@ -31,7 +31,7 @@ async def root():
 
 @app.get("/ActualizaListas")
 async def root():
-    cargarlistas.cargardatos()
-
+    lista = cargarlistas.cargardatos()
+    return lista
     
 

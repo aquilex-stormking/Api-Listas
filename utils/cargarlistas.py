@@ -4,21 +4,23 @@ import json
 from bs4 import BeautifulSoup, NavigableString
 import warnings
 import re
+import time
 
 
 data =None
 # libreria para ignorar las advertencias
 def trae_datos(page=1):
 
-    try:    
-        response = requests.get('https://api.fbi.gov/wanted/v1/list', params = {
-            'page': page
-        })
-        data = json.loads(response.content)
-    except:
-        data = None
+    # try:    
+    response = requests.get('https://api.fbi.gov/wanted/v1/list', params={
+        'page': page})
+    
+    if response.status_code == 200:
+            response_content = response.content
+            datas = response_content.decode('utf-8')
+            page_data = json.loads(datas)
         
-    return data
+    return page_data
 
 def validar(a):
         if a is not None:
@@ -28,16 +30,49 @@ def validar(a):
             return a
         
 def cargardatos():
-
+    
+    registros_ofac = 0
+    registros_onu = 0
+    registros_fbi = 0 
     warnings.filterwarnings("ignore")
 
-    #Obtener Datos de XML   
-    # Se obtiene la informacion de la ofac
+    # # Obtener Datos de XML   
+    # Se obtiene la informacion de la ofac SDN
+    urlofac = "https://www.treasury.gov/ofac/downloads/sdn.xml"
+    xmlofac = requests.get(urlofac)
+    # print(xmlofac.content)
+    soupofac = BeautifulSoup(xmlofac.content, 'xml')
+    persona = soupofac.find_all('sdnEntry')
+    
+    pasa1 = [] 
+
+    for i in persona:
+        f_name = i.find('firstName')
+        s_name = i.find('lastName')
+        u_id = i.find('uid')
+        t_id = i.find('idType')
+        n_id = i.find('idNumber')
+        address = i.find('address')
+        country = i.find('idCountry')
+        city = i.find('city')
+
+        f_name = validar(f_name)
+        s_name = validar(s_name)
+        u_id = validar(u_id)
+        t_id = validar(t_id)
+        n_id = validar(n_id)
+        address = validar(address)
+        address = address.replace('\n', ' ')
+        country = validar(country)
+        city = validar(city)
+        registros_ofac += 1
+        pasa1.append((u_id,(f_name+" "+s_name).upper(),t_id,n_id,address,country,city))
+
+    #lista consolidada
     urlofac = "https://www.treasury.gov/ofac/downloads/consolidated/consolidated.xml"
     xmlofac = requests.get(urlofac)
     soupofac = BeautifulSoup(xmlofac.content, 'lxml', from_encoding='utf-8')
     persona = soupofac.findAll('sdnentry')
-    pasa1 = [] 
 
     for i in persona:
         f_name = i.find('firstname')
@@ -58,12 +93,16 @@ def cargardatos():
         address = address.replace('\n', ' ')
         country = validar(country)
         city = validar(city)
-
+        registros_ofac += 1
         pasa1.append((u_id,(f_name+" "+s_name).upper(),t_id,n_id,address,country,city))
+
 
     dfofac = pd.DataFrame(pasa1, columns = ['uid', 'first_name','tipoId','identificacion','direccion','pais','ciudad'])
     dfofac.to_pickle("dummy.pkl")
-    # Suprime solo las advertencias de solicitud insegura
+
+    # time.sleep(1.1)
+
+    #Suprime solo las advertencias de solicitud insegura
     
     # Se obtiene la informacion de la onu
     try :
@@ -101,18 +140,20 @@ def cargardatos():
                 
     except:
         pasa1=[]
+           
 
     dfonu = pd.DataFrame(pasa1, columns = ['dataid', 'first_name','tipo_documento','numero_documento','description','pais','fecha_nacimiento'])
     #almacenar datos en la base de datos sql
     dfonu.to_pickle("dummy2.pkl")
-    # Se obtiene la informacion del fbi
-    data=trae_datos()
+    # # # Se obtiene la informacion del fbi
+    data = trae_datos()
     guarda = []
-    
     if data is None:
-        return guarda
+        print(data)
+        
     
     else:
+        print(data['total'])
         datos = data['total']
         dato = 0
         page=0
@@ -125,17 +166,19 @@ def cargardatos():
             if data is not None and 'items' in data:
                 for o in data['items']:
                     if o['title'] is not None and o['uid'] is not None:
+                        registros_fbi += 1 
+
                         guarda.append((o['uid'],o['title']))
                     dato+=1
                 
             else:
                 dato+=1
-            
+            time.sleep(1)
             page+=1
             
         dffbi = pd.DataFrame(guarda, columns=['uid', 'title'])
         dffbi.to_pickle("dummy3.pkl")
-        if data is not None and 'items' in data:    
+        if data is not None and 'items' in data:   
             for o in data['items']:
                 detallelink = ''
                 if o['details'] is not None :
@@ -149,15 +192,18 @@ def cargardatos():
                 o['url']
                 o['nationality']
                 o['images']   
+                
                 guarda.append((o['uid'], o['title'], o['details'], o['url'], o['nationality'], o['images'],detallelink))
                 dato += 1
         page += 1
         dffbi = pd.DataFrame(guarda, columns = ['uid', 'title','detalle','link_info','nacionalidad','link_picture','detallelink'])
+
         dffbi.to_pickle("dummy3.pkl")
 
     #carga lista de terroristas
     url = "https://eur-lex.europa.eu/legal-content/ES/TXT/HTML/?uri=OJ:L:2022:025:FULL"
     response = requests.get(url)
+
 
     if response.status_code == 200:
         html_content = response.text
@@ -220,8 +266,10 @@ def cargardatos():
     
     dfterro = pd.DataFrame(persona, columns = ['nombre', 'apellido','nacimiento','pasaporte'])
     dfterro.to_pickle("dummy4.pkl")
+    lista1 = {"registros_ofac": registros_ofac,"registros_onu":registros_onu,"registros_fbi":registros_fbi}
+    
+    return lista1
 
-cargardatos()
 
 def terroristas():
      #carga lista de terroristas
